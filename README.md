@@ -6,7 +6,7 @@ Dockerium is my own version of Docker that I made using Golang. I did this for t
 2. I wanted to understand how Docker works behind the scenes.
 
 ## Video Demo
-[Screencast from 25-04-24 08:42:38 PM IST.webm](https://github.com/Vandit1604/dockerium/assets/107131545/29a32c59-183b-475c-81f2-908e5d41f990)
+[Demo](https://github.com/Vandit1604/dockerium/assets/107131545/29a32c59-183b-475c-81f2-908e5d41f990)
 
 
 ## Usage
