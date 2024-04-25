@@ -11,6 +11,12 @@ import (
 	"github.com/vandit1604/dockerium/docker"
 )
 
+var (
+	rootfsPath  string = "/tmp/dockerium/rootfs"
+	memorylimit string = "524288000"
+	cpulimit    string = "512"
+)
+
 // init is called before main function. This automatically registers the commands inside the initialisation
 func init() {
 	// via `Register` we can register the functions that we will use inside the namespace that we are creating for a container
@@ -24,24 +30,19 @@ func init() {
 // does all the Initialisation of the namespace
 func initialisation() {
 	log.Printf("\n>> ANYTHING THAT WE WANT TO DO INSIDE THE NAMESPACE <<\n")
-	newRootPath := os.Args[1]
-	memoryLimit := os.Args[2]
-	cpuLimit := os.Args[3]
 
-	os.MkdirAll(newRootPath, 0700)
-
-	if err := limitCPUandMemory(newRootPath, memoryLimit, cpuLimit); err != nil {
+	if err := limitCPUandMemory(rootfsPath, memorylimit, cpulimit); err != nil {
 		log.Printf("Error Limiting Cpu and Memory - %s\n", err)
 		os.Exit(1)
 	}
 
-	if err := mountProc(newRootPath); err != nil {
+	if err := mountProc(rootfsPath); err != nil {
 		log.Printf("Error mounting /proc - %s\n", err)
 		os.Exit(1)
 	}
-	defer syscall.Unmount(filepath.Join(newRootPath, "/proc"), 0)
+	defer syscall.Unmount(filepath.Join(rootfsPath, "/proc"), 0)
 
-	if err := pivotRoot(newRootPath); err != nil {
+	if err := pivotRoot(rootfsPath); err != nil {
 		log.Printf("Error running pivot_root - %s\n", err)
 		os.Exit(1)
 	}
@@ -75,13 +76,43 @@ func nsRun() {
 }
 
 func main() {
-	token := docker.Authenticate("debian")
-	rootfsPath := "/tmp/dockerium/rootfs"
-	memorylimit := "524288000"
-	cpulimit := "512"
+	/*
+		Authenticate - see the authentication section of the documentation.
+		Fetch the manifest for the image you wish to download. See the section Pulling an Image Manifest for details.
+		Parse the manifest to identify the layers to be downloaded. See the Image Manifest V 2, Schema 2 for details of the fields in the manifest.
+		Fetch each layer listed in the manifest. See the section on Pulling a Layer for details.
+		Unzip the layers on top of each other to re-create the filesystem. Remember that the layer list is ordered starting from the base image.
+		Fetch the config data and store it ready for Step 8.
+	*/
+	os.MkdirAll(rootfsPath, 0700)
 
-	//  We’re now passing an argument, rootfsPath, to initialisation.
-	cmd := reexec.Command("initialisation", rootfsPath, memorylimit, cpulimit)
+	// fetch image here
+	image := "debian"
+
+	token, err := docker.Authenticate(image)
+	if err != nil {
+		log.Fatalf("Error authenticating for the image: %v", err)
+	}
+
+	manifest, err := docker.FetchManifest(image, token)
+	if err != nil {
+		log.Fatalf("Error fetching manifest: %v", err)
+	}
+
+	err = docker.FetchLayers(image, token, *manifest)
+	if err != nil {
+		log.Fatalf("Error fetching layers: %v", err)
+	}
+
+	config, err := docker.FetchConfig(image, token, *manifest)
+	if err != nil {
+		log.Fatalf("Error fetching layers: %v", err)
+	}
+
+	log.Println(config)
+
+	//  We’re now passing the arguments, rootfsPath, memorylimit, cpulimit, to initialisation.
+	cmd := reexec.Command("initialisation")
 
 	// pipe the stdin/out/err of os to cmd
 	cmd.Stdin = os.Stdin
