@@ -92,12 +92,6 @@ func FetchLayers(image string, token string, manifest ManifestResponse) error {
 		}
 	}
 
-	// extract the layer.tar
-	err := ExtractLayer("/tmp/dockerium/rootfs/layer.tar")
-	if err != nil {
-		log.Fatalf("Error extracting the image layers: %v", err)
-	}
-
 	return nil
 }
 
@@ -130,7 +124,7 @@ func ExtractLayer(filepath string) error {
 	// TODO: complete this function
 	fmt.Println("☔️ Extracting Layers...")
 
-	cmd := exec.Command("tar", "-xvf", filepath)
+	cmd := exec.Command("tar", "-xvf", filepath, "-C", "/tmp/dockerium/rootfs/")
 	if err := cmd.Run(); err != nil {
 		log.Fatalf("Error extracting the layer:%v", err)
 	}

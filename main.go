@@ -104,6 +104,12 @@ func main() {
 		log.Fatalf("Error fetching layers: %v", err)
 	}
 
+	// extract the layer.tar
+	err = docker.ExtractLayer("/tmp/dockerium/rootfs/layer.tar")
+	if err != nil {
+		log.Fatalf("Error extracting the image layers: %v", err)
+	}
+
 	config, err := docker.FetchConfig(image, token, *manifest)
 	if err != nil {
 		log.Fatalf("Error fetching layers: %v", err)
