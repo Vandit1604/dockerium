@@ -86,8 +86,8 @@ func main() {
 	*/
 	os.MkdirAll(rootfsPath, 0700)
 
-	// fetch image here
-	image := "debian"
+	// name of image here
+	image := os.Args[1]
 
 	token, err := docker.Authenticate(image)
 	if err != nil {

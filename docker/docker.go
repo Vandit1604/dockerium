@@ -121,13 +121,11 @@ func FetchConfig(image string, token string, manifest ManifestResponse) (Config,
 }
 
 func ExtractLayer(filepath string) error {
-	// TODO: complete this function
 	fmt.Println("☔️ Extracting Layers...")
 
 	cmd := exec.Command("tar", "-xvf", filepath, "-C", "/tmp/dockerium/rootfs/")
 	if err := cmd.Run(); err != nil {
 		log.Fatalf("Error extracting the layer:%v", err)
 	}
-
 	return nil
 }
